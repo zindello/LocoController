@@ -1,4 +1,4 @@
-#define DEBUGON;
+//#define DEBUGON;
 
 #define DIRECTION_BUTTON 13
 #define LIGHT_BUTTON 12
