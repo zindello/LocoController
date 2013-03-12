@@ -55,12 +55,12 @@ void setup() {
   analogWrite(PWM_PIN, 0);
   delay(1000);
   changeDirection(2);
-  Serial.begin(9600);
+  //Serial.begin(9600);
 }
 
 void loop() {
   throttleVal = analogRead(THROTTLE_INPUT) / 4;
-  Serial.println(throttleVal);
+  //Serial.println(throttleVal);
   if ( throttleVal < 10 ) {
     analogWrite(PWM_PIN, 0);
     
