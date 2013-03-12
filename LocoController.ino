@@ -1,3 +1,5 @@
+#define DEBUGON;
+
 #define DIRECTION_BUTTON 13
 #define LIGHT_BUTTON 12
 #define HORN_BUTTON 11
@@ -55,12 +57,16 @@ void setup() {
   analogWrite(PWM_PIN, 0);
   delay(1000);
   changeDirection(2);
-  //Serial.begin(9600);
+  #ifdef DEBUGON 
+    Serial.begin(9600);
+  #endif
 }
 
 void loop() {
   throttleVal = analogRead(THROTTLE_INPUT) / 4;
-  //Serial.println(throttleVal);
+  #ifdef DEBUGON
+    Serial.println(throttleVal);
+  #endif
   if ( throttleVal < 10 ) {
     analogWrite(PWM_PIN, 0);
     
