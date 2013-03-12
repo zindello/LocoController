@@ -13,8 +13,12 @@
 #define PWM_PIN 3
 #define THROTTLE_INPUT A0
 
-int currentDir = 2; //1 = Forward, 2 = Neutral, 3 = Reverse;
-int lastDir = 3; //We want this to think the last direction was reverse, to that we bump into forward when we hit the button
+#define FORWARD 1
+#define NEUTRAL 2
+#define REVERSE 3
+
+int currentDir = NEUTRAL; //1 = Forward, 2 = Neutral, 3 = Reverse;
+int lastDir = REVERSE; //We want this to think the last direction was reverse, to that we bump into forward when we hit the button
 int throttleVal;
 boolean lightState = false;
 
@@ -71,17 +75,12 @@ void loop() {
     analogWrite(PWM_PIN, 0);
     
     if (digitalRead(DIRECTION_BUTTON) == LOW) {
-      if (lastDir == 3 && currentDir == 2) {
-        changeDirection(1); 
-        currentDir = 1;
-        lastDir = 1;
-      } else if (lastDir == 1 && currentDir == 2) {
-        changeDirection(3);
-        currentDir = 3;
-        lastDir = 3;
+      if (lastDir == REVERSE && currentDir == NEUTRAL) {
+        changeDirection(FORWARD); 
+      } else if (lastDir == FORWARD && currentDir == NEUTRAL) {
+        changeDirection(REVERSE);
       } else {
-        changeDirection(2);
-        currentDir = 2;
+        changeDirection(NEUTRAL);
       }
     }
   } else {
@@ -117,16 +116,21 @@ void changeDirection(int dir) {
   digitalWrite(REVERSE_LED, LOW);
   
   switch(dir) {
-    case 1:
+    case FORWARD:
       digitalWrite(FORWARD_PIN, HIGH);
       digitalWrite(FORWARD_LED, HIGH);
+      currentDir = FORWARD;
+      lastDir = FORWARD;
       break;
-    case 3:
+    case REVERSE:
       digitalWrite(REVERSE_PIN, HIGH);
       digitalWrite(REVERSE_LED, HIGH);
+      currentDir = REVERSE;
+      lastDir = REVERSE;
       break;
     default:
       digitalWrite(NEUTRAL_LED, HIGH);
+      currentDir = NEUTRAL;
   }
   delay(250);
 }
