@@ -10,7 +10,7 @@
 #define REVERSE_PIN 6
 #define LIGHT_PIN 3
 #define HORN_PIN 4
-#define PWM_PIN OCR1A
+#define PWM_PIN OCR3A
 #define THROTTLE_INPUT A0
 
 #define FORWARD 1
@@ -19,7 +19,7 @@
 
 int currentDir = NEUTRAL; //1 = Forward, 2 = Neutral, 3 = Reverse;
 int lastDir = REVERSE; //We want this to think the last direction was reverse, to that we bump into forward when we hit the button
-int throttleVal;
+uint8_t throttleVal;
 boolean lightState = false;
 
 
