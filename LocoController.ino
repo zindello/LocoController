@@ -8,9 +8,9 @@
 #define REVERSE_LED 8
 #define FORWARD_PIN 7
 #define REVERSE_PIN 6
-#define LIGHT_PIN 5
+#define LIGHT_PIN 3
 #define HORN_PIN 4
-#define PWM_PIN 3
+#define PWM_PIN OCR1A
 #define THROTTLE_INPUT A0
 
 #define FORWARD 1
@@ -25,6 +25,10 @@ boolean lightState = false;
 
 void setup() {
 
+  //Let's change the prescaler on Timer1 so that we're FastPWM at 7812.5 Hz instead of a measly 900ish
+  TCCR3A = 0x01;
+  TCCR3B = 0x0A;
+  
   //Lets setup the input pins
   pinMode(DIRECTION_BUTTON, INPUT);
   pinMode(LIGHT_BUTTON, INPUT);
@@ -44,7 +48,7 @@ void setup() {
   pinMode(REVERSE_PIN, OUTPUT);
   pinMode(LIGHT_PIN, OUTPUT);
   pinMode(HORN_PIN, OUTPUT);
-  pinMode(PWM_PIN, OUTPUT);
+//  pinMode(PWM_PIN, OUTPUT);
   
   //Let's give the user some indication that we're booting up
   
@@ -58,7 +62,7 @@ void setup() {
   digitalWrite(REVERSE_PIN, LOW);
   digitalWrite(LIGHT_PIN, LOW);
   digitalWrite(HORN_PIN, LOW);
-  analogWrite(PWM_PIN, 0);
+  PWM_PIN = 0;
   delay(1000);
   changeDirection(2);
   #ifdef DEBUGON 
@@ -72,7 +76,7 @@ void loop() {
     Serial.println(throttleVal);
   #endif
   if ( throttleVal < 10 ) {
-    analogWrite(PWM_PIN, 0);
+    PWM_PIN = 0;
     
     if (digitalRead(DIRECTION_BUTTON) == LOW) {
       if (lastDir == REVERSE && currentDir == NEUTRAL) {
@@ -84,7 +88,7 @@ void loop() {
       }
     }
   } else {
-    analogWrite(PWM_PIN, throttleVal);
+    PWM_PIN = throttleVal;
   }
   
   if (digitalRead(HORN_BUTTON) == LOW) {
@@ -97,11 +101,11 @@ void loop() {
     if (lightState == true) {
       digitalWrite(LIGHT_PIN, LOW);
       lightState = false;
-      delay(100);
+      delay(200);
     } else {
       digitalWrite(LIGHT_PIN, HIGH);
       lightState = true;
-      delay(100);
+      delay(200);
     }
   } 
   delay(10);
