@@ -10,7 +10,7 @@
 #define REVERSE_PIN 6
 #define LIGHT_PIN 3
 #define HORN_PIN 4
-#define PWM_PIN OCR3A
+#define PWM_PIN OCR3A // Digital Pin 5
 #define THROTTLE_INPUT A0
 
 #define FORWARD 1
