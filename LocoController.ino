@@ -34,7 +34,7 @@ void setup() {
   TCCR3B = 0x0A;
   
   //Now lets set PORTC6 for output in the DDR6 register
-  DDRC = (1<<DDC6);
+  DDRC |= (1<<DDC6);
   
   //Lets setup the input pins
   pinMode(DIRECTION_BUTTON, INPUT);
