@@ -3,13 +3,17 @@
 #define DIRECTION_BUTTON 13
 #define LIGHT_BUTTON 12
 #define HORN_BUTTON 11
+
 #define FORWARD_LED 10
 #define NEUTRAL_LED 9
 #define REVERSE_LED 8
+
 #define FORWARD_PIN 7
 #define REVERSE_PIN 6
+
 #define LIGHT_PIN 3
 #define HORN_PIN 4
+
 #define PWM_PIN OCR3A // Digital Pin 5
 #define THROTTLE_INPUT A0
 
@@ -28,6 +32,9 @@ void setup() {
   //Let's change the prescaler on Timer1 so that we're FastPWM at 7812.5 Hz instead of a measly 900ish
   TCCR3A = 0x01;
   TCCR3B = 0x0A;
+  
+  //Now lets set PORTC6 for output in the DDR6 register
+  DDRC = (1<<DDC6);
   
   //Lets setup the input pins
   pinMode(DIRECTION_BUTTON, INPUT);
@@ -71,7 +78,7 @@ void setup() {
 }
 
 void loop() {
-  throttleVal = analogRead(THROTTLE_INPUT) / 4;
+  throttleVal = analogRead(THROTTLE_INPUT) / 4; //analogRead provides 0-1024, we want this to be a 0-255 value
   #ifdef DEBUGON
     Serial.println(throttleVal);
   #endif
