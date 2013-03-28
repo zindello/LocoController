@@ -11,10 +11,10 @@
 #define FORWARD_PIN 7
 #define REVERSE_PIN 6
 
-#define LIGHT_PIN 3
+#define LIGHT_PIN 5
 #define HORN_PIN 4
 
-#define PWM_PIN OCR3A // Digital Pin 5
+#define PWM_PIN OCR2A // Digital Pin 3 PORTD4
 #define THROTTLE_INPUT A0
 
 #define FORWARD 1
@@ -28,13 +28,17 @@ boolean lightState = false;
 
 
 void setup() {
-
-  //Let's change the prescaler on Timer1 so that we're FastPWM at 7812.5 Hz instead of a measly 900ish
-  TCCR3A = 0x01;
-  TCCR3B = 0x0A;
   
-  //Now lets set PORTC6 for output in the DDR6 register
-  DDRC |= (1<<DDC6);
+  //First, lets set PORTD4(OCR2B) (Arduino Pin 3) for output in the DDR4 register
+  DDRD |= (1<<DDD4);
+    
+  //Clear OC2B on Compare Match (Start high, set low when we hit our PWM value)
+  TCCR2A |= (1<<COM2B1);
+  //Set FastPWM
+  TCCR2A |= (1<<WGM21);
+  TCCR2A |= (1<<WGM20);
+  //Let's change the prescaler on Timer2 so that we're FastPWM at 7812.5 Hz instead of a measly 900ish
+  TCCR2B != (1<<CS21);
   
   //Lets setup the input pins
   pinMode(DIRECTION_BUTTON, INPUT);
