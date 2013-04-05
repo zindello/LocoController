@@ -150,8 +150,11 @@ void loop() {
     Serial.println(buttonVal);
   #endif
   if ( throttleVal < 10 ) {
+    //Set the OCR to zero
     PWM_PIN = 0;
+    //Put the port back into tri-state
     DDRD &= ~(1<<DDD3);
+    //Turn off the OCR
     TCCR2B &= ~(1<<CS21);
     
     //If one of our braking buttons is on, then we can to do something
@@ -197,17 +200,24 @@ void loop() {
       }
     }
   } else if (currentDir != NEUTRAL) {
+    //Enable the OCR
     TCCR2B |= (1<<CS21);
+    //Enable the pin for output
     DDRD |= (1<<DDD3);
-    if (throttleVal <= throttleLimit ) {
+    if (throttleVal < throttleLimit ) {
+      //Write out throttle Value
       PWM_PIN = throttleVal;
     } else {
+      //We've hit the limit, so don't allow it to go any higher
       PWM_PIN = throttleLimit;
     }
   } else {
-    TCCR2B &= ~(1<<CS21);
-    DDRD &= ~(1<<DDD3);
+    //Write zero to the OCR
     PWM_PIN = 0;
+    //Stick the pin back into tri-state
+    DDRD &= ~(1<<DDD3);
+    //Disable the OCR
+    TCCR2B &= ~(1<<CS21);
   }
   
   if (173 > buttonVal && buttonVal > 153) {
