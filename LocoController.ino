@@ -152,11 +152,10 @@ void loop() {
   if ( throttleVal < 10 ) {
     //Set the OCR to zero
     PWM_PIN = 0;
-    //Put the port back into tri-state
-    DDRD &= ~(1<<DDD3);
     //Turn off the OCR
     TCCR2B &= ~(1<<CS21);
-    
+    //Put the port back into tri-state
+    DDRD &= ~(1<<DDD3);
     //If one of our braking buttons is on, then we can to do something
     if ((910 > buttonVal && buttonVal > 890) || (780 > buttonVal && buttonVal > 760)) {
       // "Light" Braking
@@ -200,10 +199,10 @@ void loop() {
       }
     }
   } else if (currentDir != NEUTRAL) {
-    //Enable the OCR
-    TCCR2B |= (1<<CS21);
     //Enable the pin for output
     DDRD |= (1<<DDD3);
+    //Enable the OCR
+    TCCR2B |= (1<<CS21);
     if (throttleVal < throttleLimit ) {
       //Write out throttle Value
       PWM_PIN = throttleVal;
@@ -214,10 +213,10 @@ void loop() {
   } else {
     //Write zero to the OCR
     PWM_PIN = 0;
-    //Stick the pin back into tri-state
-    DDRD &= ~(1<<DDD3);
     //Disable the OCR
     TCCR2B &= ~(1<<CS21);
+    //Stick the pin back into tri-state
+    DDRD &= ~(1<<DDD3);
   }
   
   if (173 > buttonVal && buttonVal > 153) {
