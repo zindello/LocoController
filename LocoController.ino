@@ -131,10 +131,14 @@ void setup() {
       //Otherwise, enable the limitVal
       default: 
       throttleLimit = throttleLimitVal;
+      ShiftPWM.SetAll(maxBrightness);
+      delay (1000);
+      ShiftPWM.SetAll(dimBrightness);
       eeprom_update_byte_stupidarduino(throttleLimitAddr, throttleLimitVal);
       break;
     }
   }
+  
   
   #ifdef DEBUGON 
     Serial.begin(9600);
