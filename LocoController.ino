@@ -51,10 +51,15 @@ unsigned char pwmFrequency = 75;
 unsigned char dimBrightness = 3;
 
 int currentDir = NEUTRAL; //1 = Forward, 2 = Neutral, 3 = Reverse;
+//This will hold our throttle value;
 uint8_t throttleVal;
+//This will hold out throttle limit value to set, if we enable the limit
 const uint8_t throttleLimitVal = 192;
+//This will hold the actual limit
 uint8_t throttleLimit;
+//This will hold the analogRead from the buttons
 int buttonVal;
+//Headlight off by default
 boolean lightState = false;
 
 void setup() {
@@ -104,20 +109,26 @@ void setup() {
   
   changeDirection(NEUTRAL);
   buttonVal = analogRead(BUTTONS_INPUT);
+  
+  //Let's read in the throttle limit from the 0x00 EEPROM address
   throttleLimit = eeprom_read_byte(throttleLimitAddr);
   
-  if (throttleLimit != throttleLimitVal || throttleLimit != 255) { 
+  //Let's make sure it's a valid value (Either throttleLimitVal or 255);
+  if (throttleLimit != throttleLimitVal && throttleLimit != 255) { 
     throttleLimit = 255; 
   }
   
+  //Are we toggling the throttle limit?
   if ( 910 > buttonVal && buttonVal > 890 )
   {
-    //Really need to write this to EEPROM. One for today I think
+    //Let's see what we've got
     switch (throttleLimit) {
+      //If it's currently set to the LimitVal, set it to full
       case throttleLimitVal:
       throttleLimit = 255;
       eeprom_update_byte_stupidarduino(throttleLimitAddr, 0xFF);
       break;
+      //Otherwise, enable the limitVal
       default: 
       throttleLimit = throttleLimitVal;
       eeprom_update_byte_stupidarduino(throttleLimitAddr, throttleLimitVal);
