@@ -34,7 +34,8 @@ const int ShiftPWM_latchPin=12;
 #define NEUTRAL 2
 #define REVERSE 3
 
-uint8_t * throttleLimitAddr = 0;
+uint8_t throttleLimitAddr = 0x00;
+uint8_t throttleLimitEnabledAddr = 0x01;
 
 //Set up our ShiftPWM parameters
 const bool ShiftPWM_invertOutputs = false;
@@ -53,9 +54,9 @@ unsigned char dimBrightness = 3;
 int currentDir = NEUTRAL; //1 = Forward, 2 = Neutral, 3 = Reverse;
 //This will hold our throttle value;
 uint8_t throttleVal;
-//This will hold out throttle limit value to set, if we enable the limit
-const uint8_t throttleLimitVal = 192;
-//This will hold the actual limit
+//Is the throttle Limit enabled?
+uint8_t throttleLimitEnabled;
+//This will hold the throttle limit
 uint8_t throttleLimit;
 //This will hold the analogRead from the buttons
 int buttonVal;
@@ -111,35 +112,47 @@ void setup() {
   buttonVal = analogRead(BUTTONS_INPUT);
   
   //Let's read in the throttle limit from the 0x00 EEPROM address
-  throttleLimit = eeprom_read_byte(throttleLimitAddr);
+  throttleLimit = eeprom_read_byte((uint8_t *) throttleLimitAddr);
+  throttleLimitEnabled = eeprom_read_byte((uint8_t *) throttleLimitEnabledAddr);
   
-  //Let's make sure it's a valid value (Either throttleLimitVal or 255);
-  if (throttleLimit != throttleLimitVal && throttleLimit != 255) { 
+  //Let's make sure it's a valid value (less than 255);
+  if (throttleLimit > 255) { 
     throttleLimit = 255; 
   }
   
   //Are we toggling the throttle limit?
   if ( 910 > buttonVal && buttonVal > 890 )
   {
-    //Let's see what we've got
-    switch (throttleLimit) {
-      //If it's currently set to the LimitVal, set it to full
-      case throttleLimitVal:
-      throttleLimit = 255;
-      eeprom_update_byte_stupidarduino(throttleLimitAddr, 0xFF);
-      break;
-      //Otherwise, enable the limitVal
-      default: 
-      throttleLimit = throttleLimitVal;
-      ShiftPWM.SetAll(maxBrightness);
-      delay (1000);
-      ShiftPWM.SetAll(dimBrightness);
-      eeprom_update_byte_stupidarduino(throttleLimitAddr, throttleLimitVal);
-      break;
+    if (throttleLimitEnabled == 1) {
+      throttleLimitEnabled = 0;
+      eeprom_update_byte_stupidarduino(throttleLimitEnabledAddr, 0x00);
+    } else {
+      throttleLimitEnabled = 1;
+      eeprom_update_byte_stupidarduino(throttleLimitEnabledAddr, 0x01);
     }
   }
+
+  //Are we trying to set the throttle Limit value in the EEPROM?
+  if (780 > buttonVal && buttonVal > 760) {
+    uint8_t newLimit = analogRead(THROTTLE_INPUT) / 4;
+    eeprom_update_byte_stupidarduino(throttleLimitAddr, 0xFF);
+    throttleLimit = newLimit;
+    delay(1000);
+    ShiftPWM.SetAll(maxBrightness);
+    delay(1000);
+    ShiftPWM.SetAll(dimBrightness);
+  }
+
   
-  
+  if (throttleLimitEnabled != 1) {
+    throttleLimit = 255;
+  } else {
+    delay(500);
+    ShiftPWM.SetAll(maxBrightness);
+    delay(500);
+    ShiftPWM.SetAll(dimBrightness);
+  }
+
   #ifdef DEBUGON 
     Serial.begin(9600);
   #endif
@@ -284,11 +297,11 @@ void changeDirection(int dir) {
 }
 
 
-static void eeprom_update_byte_stupidarduino(uint8_t * address, uint8_t value) {
-  if (eeprom_read_byte(address) == value) {
+static void eeprom_update_byte_stupidarduino(uint8_t address, uint8_t value) {
+  if (eeprom_read_byte((uint8_t *) address) == value) {
     return;
   } else {
-    eeprom_write_byte(address, value);
+    eeprom_write_byte((uint8_t *) address, value);
     return;
   }
 }
