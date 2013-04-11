@@ -1,9 +1,10 @@
-//#define DEBUGON;
+#define DEBUGON;
 
 //Define our inputs
 #define THROTTLE_INPUT A0
 #define BUTTONS_INPUT A1
 #define CURRENT_INPUT A2
+#define KEY_INPUT 2
 
 #define SHIFTPWM_NOSPI
 const int ShiftPWM_dataPin = 11;
@@ -68,6 +69,15 @@ void setup() {
   ShiftPWM.Start(pwmFrequency,maxBrightness);
   ShiftPWM.SetAmountOfRegisters(numRegisters);
   
+  pinMode(KEY_INPUT, INPUT);
+  digitalWrite(KEY_INPUT, HIGH);
+  
+  ShiftPWM.SetAll(maxBrightness);
+
+  #ifdef DEBUGON 
+    Serial.begin(9600);
+  #endif  
+  
   //First, lets set PORTD4(OCR2B) (Arduino Pin 3) for output in the DDR4 register
   DDRD |= (1<<DDD3);
     
@@ -108,7 +118,6 @@ void setup() {
   delay(1000);
   ShiftPWM.SetAll(dimBrightness);
   
-  changeDirection(NEUTRAL);
   buttonVal = analogRead(BUTTONS_INPUT);
   
   //Let's read in the throttle limit from the 0x00 EEPROM address
@@ -133,9 +142,9 @@ void setup() {
   }
 
   //Are we trying to set the throttle Limit value in the EEPROM?
-  if (780 > buttonVal && buttonVal > 760) {
+  if (790 > buttonVal && buttonVal > 770) {
     uint8_t newLimit = analogRead(THROTTLE_INPUT) / 4;
-    eeprom_update_byte_stupidarduino(throttleLimitAddr, 0xFF);
+    eeprom_update_byte_stupidarduino(throttleLimitAddr, analogRead(THROTTLE_INPUT) / 4);
     throttleLimit = newLimit;
     delay(1000);
     ShiftPWM.SetAll(maxBrightness);
@@ -152,14 +161,33 @@ void setup() {
     delay(500);
     ShiftPWM.SetAll(dimBrightness);
   }
-
-  #ifdef DEBUGON 
-    Serial.begin(9600);
-  #endif
+  
+  changeDirection(NEUTRAL);
+  
 }
 
 void loop() {
+  
+  if ( digitalRead(KEY_INPUT) == HIGH ) {
+    //Set the OCR to zero
+    PWM_PIN = 0;
+    //Turn off the OCR
+    TCCR2B &= ~(1<<CS21);
+    //Put the port back into tri-state
+    DDRD &= ~(1<<DDD3);    
+    //Put the loco into neutral
+    changeDirection(NEUTRAL);
+    while ( digitalRead(KEY_INPUT) == HIGH ) {
+      delay(1000);
+      //Wait until the key is enabled again
+    } 
+  }
+  
+  
   throttleVal = analogRead(THROTTLE_INPUT) / 4; //analogRead provides 0-1024, we want this to be a 0-255 value
+  if (throttleVal >= throttleLimit) {
+    throttleVal = throttleLimit;  
+  }
   buttonVal = analogRead(BUTTONS_INPUT);
 
   #ifdef DEBUGON
@@ -168,9 +196,7 @@ void loop() {
   #endif
   if ( throttleVal < 10 ) {
     //Set the OCR to zero
-    if ( PWM_PIN != 0 ) {
-      PWM_PIN = 0;
-    }
+    PWM_PIN = 0;
     //Turn off the OCR
     TCCR2B &= ~(1<<CS21);
     //Put the port back into tri-state
@@ -193,7 +219,7 @@ void loop() {
       }
       
       //"Heavy" braking
-      while (780 > buttonVal && buttonVal > 760) {
+      while (790 > buttonVal && buttonVal > 770) {
         //Short out the motors, just make sure both outputs are off
         digitalWrite(REVERSE_PIN, LOW);
         digitalWrite(FORWARD_PIN, LOW);
@@ -222,13 +248,8 @@ void loop() {
     DDRD |= (1<<DDD3);
     //Enable the OCR
     TCCR2B |= (1<<CS21);
-    if (throttleVal < throttleLimit ) {
-      //Write out throttle Value
-      PWM_PIN = throttleVal;
-    } else {
-      //We've hit the limit, so don't allow it to go any higher
-      PWM_PIN = throttleLimit;
-    }
+    //Write out throttle Value
+    PWM_PIN = throttleVal;
   } else {
     //Write zero to the OCR
     if ( PWM_PIN != 0 ) {
