@@ -1,4 +1,55 @@
-#define DEBUGON;
+//#define DEBUGON;
+
+/*
+This the the LocoController Sketch for use on my girlfriends 24vDC Electric 5" Gauge Loco. This work can be adapted for use on other engines, however this work is provide with ABSOLUTELY NO WARRANTY and I take NO LIABILITY if you use this for your own purposes. You have been warned.
+
+This Sketch is designed for use on an ARDUINO NANO/ATMega328. It pokes the PWM registers DIRECTLY and DOES NOT USE the analogWrite functions __AT__ALL__. If you plan on using this on a non ATMega328 chip, you'll need to modify these appropriately - YOU HAVE BEEN WARNED
+The Loco Control panel is fairly simple. It has the following:
+
+7 backlit push buttons (Each backlight has variable brightness control, to indicate if the light is on, or which direction we're set for):
+
+Brake 1 - Switches the "flyback diode" in reverse with the motors providing a .7v drop and some dynamic braking effect
+Brake 2 - Switches the loco contactor to "Short Out" the motors, providing a very effective dynamic brake
+Forward - This puts the loco contactor into the "Forward" position assuming that the contactor is currently in neutral AND the throttle is at zero
+Neutal - This puts the loco into neutral assuming that the throttle is at zero
+Reverse - This puts the loco contactor into the "Reverse" position assuming that the contactor is currently in neutral AND the throttle is at zero
+Horn - This activates the Horn
+Light - This activates the headlight on the loco
+
+There is also a keyswitch, which when activated will disable the throttle, and short out the motors bringing the engine to an almost dead stop. For normal operation the key must be inserted and switched on. If you remove the key, you'll come to a VERY quick stop.
+
+There are two "Special Bootup Modes" which comprise of:
+
+Pressing "Brake1" on startup, toggles the throttle limit. You can determine if the throttle limit is set on bootup by how the display flashes at you. If the throttle limit is enabled, the backlights will flash at you once for one second, and then again for half a second to tell you you're in "Limited Mode"
+Pressing "Brake2" on startup "Sets" the throttle limit to the current value that the throttle is set to. This is confirmed by a 1 second flash on the backlights, followed by a second one second flash. If the throttle limit is enabled, you'll then get a third "half second" flash on the display.
+
+Summary:
+
+For ANY operation, the keyswitch must be enabled
+
+The throttle must be in the "zero" (Less than a reading of 10 on the ADC) position in order to:
+ - Move from Neutral into Forward
+ - Move from Neutral into Reverse
+ - Move from Forward into Neutral
+ - Move from Reverse into Neutral
+ - Activate the dynamic brakes (Either Brake1 or Brake2)
+
+Once in a "gear" (Forward or Reverse)
+ - If in "Normal" mode, you have full control of the throttle up to it's maximum output
+ - If in "Limited" mode, you have control of the throttle up to the set limit
+ 
+To toggle Throttle Limit mode, hold Brake1 on power on
+To set the Throttle Limit mode, set the throttle to your desired limit, and hold "Brake2" on startup
+
+Startup backlight "Flashes"
+
+Bright - 1s - Dim - Normal operation
+Bright - 1s - Dim - .5s - Bright - .5s - Dim - Throttle Limited Operation
+Bright - 1s - Dim - 1s - Bright - 1s - Dim - Throttle Limit Set
+Bright - 1s - Dim - 1s - Bright - 1s - Dim - .5s - Bright - .5s - Dim - Throttle Limit Set and Throttle Limit Enabled
+
+
+*/
 
 //Define our inputs
 #define THROTTLE_INPUT A0
@@ -122,6 +173,7 @@ void setup() {
   
   //Let's read in the throttle limit from the 0x00 EEPROM address
   throttleLimit = eeprom_read_byte((uint8_t *) throttleLimitAddr);
+  //Let's read in if the throttle limit is enabled
   throttleLimitEnabled = eeprom_read_byte((uint8_t *) throttleLimitEnabledAddr);
   
   //Let's make sure it's a valid value (less than 255);
